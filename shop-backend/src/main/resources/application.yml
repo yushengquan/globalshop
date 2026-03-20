@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: globalshop-backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/globalshop?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    username: shopuser
+    password: shoppass123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:noreply@globalshop.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+jwt:
+  secret: ${JWT_SECRET:globalshop-secret-key-2026-very-long-string-for-security}
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: globalshop
+
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:3001

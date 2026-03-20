@@ -1,0 +1,156 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: globalshop-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-globalshop}
+      MYSQL_USER: ${MYSQL_USER:-shopuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shoppass123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - globalshop-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: globalshop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - globalshop-net
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispass123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispass123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    container_name: globalshop-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - globalshop-net
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  backend:
+    build:
+      context: ./shop-backend
+      dockerfile: Dockerfile
+    container_name: globalshop-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 8080
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-globalshop}
+      DB_USER: ${MYSQL_USER:-shopuser}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-shoppass123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispass123}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      JWT_SECRET: ${JWT_SECRET:-changeme_jwt_secret_256bit}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - globalshop-net
+    volumes:
+      - ./logs/backend:/app/logs
+
+  frontend:
+    build:
+      context: ./shop-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        VITE_MINIO_URL: ${VITE_MINIO_URL:-http://localhost:9000}
+    container_name: globalshop-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - globalshop-net
+
+  admin:
+    build:
+      context: ./shop-admin
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        VITE_MINIO_URL: ${VITE_MINIO_URL:-http://localhost:9000}
+    container_name: globalshop-admin
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+    networks:
+      - globalshop-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: globalshop-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - frontend
+      - admin
+      - backend
+    networks:
+      - globalshop-net
+
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:
+
+networks:
+  globalshop-net:
+    driver: bridge
