@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { ShoppingCart, Search, User, Menu } from 'lucide-react'
+import { ShoppingCart, Search, User, Heart } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useState } from 'react'
@@ -9,6 +9,7 @@ export default function Header() {
   const count = useCartStore((s) => s.count())
   const { user, logout } = useAuthStore()
   const [search, setSearch] = useState('')
+  const [mobileMenu, setMobileMenu] = useState(false)
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -19,7 +20,7 @@ export default function Header() {
             <Link href="/products" className="text-gray-600 hover:text-primary-600">All Products</Link>
             <Link href="/products?categoryId=1000000000000001" className="text-gray-600 hover:text-primary-600">Pet Supplies</Link>
             <Link href="/products?categoryId=1000000000000002" className="text-gray-600 hover:text-primary-600">Home Decor</Link>
-            <Link href="/products?categoryId=1000000000000003" className="text-gray-600 hover:text-primary-600">Outdoor</Link>
+            <Link href="/blog" className="text-gray-600 hover:text-primary-600">Blog</Link>
           </nav>
           <div className="flex items-center gap-3">
             <form action="/search" className="hidden md:flex items-center bg-gray-100 rounded-full px-3 py-1">
@@ -32,6 +33,9 @@ export default function Header() {
                 className="bg-transparent ml-2 text-sm outline-none w-40"
               />
             </form>
+            <Link href="/wishlist" className="p-2 hidden md:block" title="Wishlist">
+              <Heart size={22} className="text-gray-700" />
+            </Link>
             <Link href="/cart" className="relative p-2">
               <ShoppingCart size={22} className="text-gray-700" />
               {count > 0 && (
@@ -51,6 +55,14 @@ export default function Header() {
               </Link>
             )}
           </div>
+        </div>
+        {/* Mobile menu */}
+        <div className="md:hidden pb-3 flex gap-4 text-sm overflow-x-auto">
+          <Link href="/products" className="text-gray-600 whitespace-nowrap">All Products</Link>
+          <Link href="/products?categoryId=1000000000000001" className="text-gray-600 whitespace-nowrap">Pet Supplies</Link>
+          <Link href="/products?categoryId=1000000000000002" className="text-gray-600 whitespace-nowrap">Home Decor</Link>
+          <Link href="/blog" className="text-gray-600 whitespace-nowrap">Blog</Link>
+          <Link href="/wishlist" className="text-gray-600 whitespace-nowrap">Wishlist</Link>
         </div>
       </div>
     </header>

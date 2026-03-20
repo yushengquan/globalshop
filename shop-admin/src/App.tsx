@@ -10,6 +10,8 @@ import Coupons from './pages/Coupons/index'
 import Settings from './pages/Settings/index'
 import Reviews from './pages/Reviews/index'
 import Shipping from './pages/Shipping/index'
+import Refunds from './pages/Refunds/index'
+import Blog from './pages/Blog/index'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = useAuthStore(s => s.token)
@@ -29,6 +31,8 @@ export default function App() {
         <Route path="coupons" element={<Coupons />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="shipping" element={<Shipping />} />
+        <Route path="refunds" element={<Refunds />} />
+        <Route path="blog" element={<Blog />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>

@@ -2,7 +2,7 @@ import { Layout, Menu, Avatar, Dropdown, theme } from 'antd'
 import {
   DashboardOutlined, ShoppingOutlined, OrderedListOutlined,
   TagOutlined, SettingOutlined, LogoutOutlined, UserOutlined,
-  InboxOutlined, StarOutlined, CarOutlined
+  InboxOutlined, StarOutlined, CarOutlined, RollbackOutlined, FileTextOutlined
 } from '@ant-design/icons'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
@@ -15,8 +15,10 @@ const menuItems = [
   { key: '/orders', icon: <OrderedListOutlined />, label: '订单管理' },
   { key: '/inventory', icon: <InboxOutlined />, label: '库存管理' },
   { key: '/shipping', icon: <CarOutlined />, label: '物流发货' },
+  { key: '/refunds', icon: <RollbackOutlined />, label: '退款管理' },
   { key: '/reviews', icon: <StarOutlined />, label: '评价管理' },
   { key: '/coupons', icon: <TagOutlined />, label: '优惠码' },
+  { key: '/blog', icon: <FileTextOutlined />, label: 'Blog 管理' },
   { key: '/settings', icon: <SettingOutlined />, label: '店铺设置' },
 ]
 
